@@ -15,12 +15,21 @@ class ChallengeDataset(Dataset):
     def __init__(self, data, flag='train'):
         self.data = data
         self.flag = flag
-        self.__transform = tv.transforms.Compose([
-            tv.transforms.ToPILImage(),
-            tv.transforms.Resize((224, 224)),
-            tv.transforms.ToTensor(),
-            tv.transforms.Normalize(mean=train_mean, std=train_std)
-        ])
+        if flag == 'train':
+            self.__transform = tv.transforms.Compose([
+                tv.transforms.ToPILImage(),
+                tv.transforms.Resize((300, 300)),
+                tv.transforms.RandomHorizontalFlip(),       # data augmentation for training
+                tv.transforms.ToTensor(),
+                tv.transforms.Normalize(mean=train_mean, std=train_std)
+            ])
+        elif flag == 'val':
+            self.__transform = tv.transforms.Compose([
+                tv.transforms.ToPILImage(),
+                tv.transforms.Resize((300, 300)),       #(300,300) for running tests
+                tv.transforms.ToTensor(),
+                tv.transforms.Normalize(mean=train_mean, std=train_std)
+            ])
 
     def __len__(self):
         return len(self.data)
@@ -29,7 +38,7 @@ class ChallengeDataset(Dataset):
         img = imread(self.data.iloc[idx, 0])
         img = gray2rgb(img)
         img = self.__transform(img)
-        if self.flag == 'train':
-            return img, torch.tensor(self.data.iloc[idx, 1], dtype=torch.float32)
-        else:
-            return img
+        crack_label = self.data.iloc[idx, 1]  
+        inactive_label = self.data.iloc[idx, 2]  
+        labels = torch.tensor([crack_label, inactive_label], dtype=torch.float32)
+        return img, labels

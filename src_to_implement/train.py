@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 # load the data from the csv file and perform a train-test-split
 # this can be accomplished using the already imported pandas and sklearn.model_selection modules
-data = pd.read_csv('dataset.csv')
+data = pd.read_csv('data.csv', sep=';')
 
 train_data, val_data = train_test_split(data, test_size=0.2, random_state=42)
 
@@ -29,15 +29,15 @@ resnet = model.ResNet()
 # create an object of type Trainer and set its early stopping criterion
 criterion = t.nn.MSELoss()
 optimizer = t.optim.Adam(resnet.parameters(), lr=0.001)
-trainer = Trainer(resnet, criterion, optimizer)
-trainer.set_early_stopping(patience=5)
+trainer = Trainer(resnet, criterion, optimizer, train_loader, val_loader, cuda=False, early_stopping_patience=5)
+# trainer.set_early_stopping(patience=5)
 
 # go, go, go... call fit on trainer
-res = trainer.fit(train_loader, val_loader)
+train_loss, val_loss = trainer.fit(epochs=10)
 
 # plot the results
-plt.plot(np.arange(len(res[0])), res[0], label='train loss')
-plt.plot(np.arange(len(res[1])), res[1], label='val loss')
+plt.plot(np.arange(len(train_loss)), train_loss, label='train loss')
+plt.plot(np.arange(len(val_loss)), val_loss, label='val loss')
 plt.yscale('log')
 plt.legend()
 plt.savefig('losses.png')

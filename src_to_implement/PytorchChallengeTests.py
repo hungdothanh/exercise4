@@ -45,6 +45,7 @@ class TestDataset(unittest.TestCase):
                     csv_path = os.path.join(root, name)
         self.assertNotEqual(csv_path, '', 'Could not locate the data.csv file')
         self.tab = pd.read_csv(csv_path, sep=';')
+        print(self.tab.head())
 
     def test_shape(self):
         from data import ChallengeDataset
@@ -91,6 +92,7 @@ class TestModel(unittest.TestCase):
 
     def test_prediction(self):
         pred = self.model(t.rand((50, 3, 300, 300)))
+        print(pred.shape)
         pred = pred.cpu().detach().numpy()
 
         self.assertEqual(pred.shape[0], 50)
