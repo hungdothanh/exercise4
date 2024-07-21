@@ -11,5 +11,25 @@ train_std = [0.16043035, 0.16043035, 0.16043035]
 
 
 class ChallengeDataset(Dataset):
-    # TODO implement the Dataset class according to the description
-    pass
+    # flag can only either be 'val' or 'train'
+    def __init__(self, data, flag='train'):
+        self.data = data
+        self.flag = flag
+        self.__transform = tv.transforms.Compose([
+            tv.transforms.ToPILImage(),
+            tv.transforms.Resize((224, 224)),
+            tv.transforms.ToTensor(),
+            tv.transforms.Normalize(mean=train_mean, std=train_std)
+        ])
+
+    def __len__(self):
+        return len(self.data)
+    
+    def __getitem__(self, idx):
+        img = imread(self.data.iloc[idx, 0])
+        img = gray2rgb(img)
+        img = self.__transform(img)
+        if self.flag == 'train':
+            return img, torch.tensor(self.data.iloc[idx, 1], dtype=torch.float32)
+        else:
+            return img
