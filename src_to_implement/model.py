@@ -13,8 +13,16 @@ class ResidualBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.stride = stride
 
+        # Downsample if the input dimensions change
+        self.downsample = None
+        if in_channels != out_channels or stride != 1:
+            self.downsample = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(out_channels)
+            )
+
     def forward(self, x):
-        identity = x
+        identity = self.downsample(x) if self.downsample else x
 
         out = self.conv1(x)
         out = self.bn1(out)
@@ -23,18 +31,13 @@ class ResidualBlock(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
 
-        if self.stride != 1 or identity.shape[1] != out.shape[1]:
-            identity = nn.Conv2d(identity.shape[1], out.shape[1], kernel_size=1, stride=self.stride, bias=False)(identity)
-            identity = nn.BatchNorm2d(out.shape[1])(identity)
-
-        out += identity
-        out = self.relu(out)
+        out = self.relu(out + identity)
 
         return out
 
 # Define the ResNet model
 class ResNet(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=2):
         super(ResNet, self).__init__()
         self.in_channels = 64
 
@@ -76,6 +79,7 @@ class ResNet(nn.Module):
         out = self.avgpool(out)
         out = torch.flatten(out, 1)
         out = self.fc(out)
+        out = self.sigmoid(out)
 
         return out
 
