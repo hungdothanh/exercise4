@@ -33,11 +33,36 @@ trainer = Trainer(resnet, criterion, optimizer, train_loader, val_loader, cuda=F
 # trainer.set_early_stopping(patience=5)
 
 # go, go, go... call fit on trainer
-train_loss, val_loss = trainer.fit(epochs=10)
+train_loss, val_loss, val_f1 = trainer.fit(epochs=10)
 
 # plot the results
-plt.plot(np.arange(len(train_loss)), train_loss, label='train loss')
-plt.plot(np.arange(len(val_loss)), val_loss, label='val loss')
+plt.figure(figsize=(12, 6))
+
+# Plot training and validation loss
+plt.subplot(1, 2, 1)
+plt.plot(np.arange(len(train_loss)), train_loss, label='Train Loss')
+plt.plot(np.arange(len(val_loss)), val_loss, label='Validation Loss')
 plt.yscale('log')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
 plt.legend()
-plt.savefig('losses.png')
+plt.title('Training and Validation Loss')
+
+# Plot validation F1 score
+plt.subplot(1, 2, 2)
+plt.plot(np.arange(len(val_f1)), val_f1, label='Validation F1 Score', color='green')
+plt.xlabel('Epoch')
+plt.ylabel('F1 Score')
+plt.legend()
+plt.title('Validation F1 Score')
+
+plt.tight_layout()
+plt.savefig('metrics.png')
+plt.show()
+
+# # plot the results
+# plt.plot(np.arange(len(train_loss)), train_loss, label='train loss')
+# plt.plot(np.arange(len(val_loss)), val_loss, label='val loss')
+# plt.yscale('log')
+# plt.legend()
+# plt.savefig('losses.png')
