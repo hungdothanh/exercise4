@@ -33,7 +33,7 @@ trainer = Trainer(resnet, criterion, optimizer, train_loader, val_loader, cuda=F
 # trainer.set_early_stopping(patience=5)
 
 # go, go, go... call fit on trainer
-train_loss, val_loss, val_f1 = trainer.fit(epochs=10)
+train_loss, val_loss, val_f1 = trainer.fit(epochs=2)
 
 # plot the results
 plt.figure(figsize=(12, 6))
