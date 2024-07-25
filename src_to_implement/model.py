@@ -82,6 +82,3 @@ class ResNet(nn.Module):
         out = self.sigmoid(out)
 
         return out
-
-# Create an instance of the ResNet model
-model = ResNet()

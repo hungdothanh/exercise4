@@ -87,6 +87,7 @@ class Trainer:
             # Propagate through the network and calculate the loss and predictions
             outputs = self._model(x)
             loss = self._crit(outputs, y)
+
             predictions = (outputs > 0.5).float()
 
         # Return the loss and predictions
@@ -158,6 +159,7 @@ class Trainer:
         
     
     def fit(self, epochs=-1):
+        best_val_loss = None
         assert self._early_stopping_patience > 0 or epochs > 0
         # create a list for the train and validation losses, and create a counter for the epoch 
         train_losses, val_losses, val_f1s = [], [], []
@@ -178,7 +180,7 @@ class Trainer:
             val_f1s.append(val_f1)
 
             # Save the model checkpoint if there is improvement in validation loss
-            if val_loss < best_val_loss:
+            if val_loss < best_val_loss or best_val_loss is None:
                 best_val_loss = val_loss
                 self.save_checkpoint(epoch)
                 best_epoch = epoch
