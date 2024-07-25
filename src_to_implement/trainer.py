@@ -1,3 +1,5 @@
+
+import os
 import torch as t
 from sklearn.metrics import f1_score
 from tqdm.autonotebook import tqdm
@@ -19,6 +21,7 @@ class Trainer:
         self._train_dl = train_dl
         self._val_test_dl = val_test_dl
         self._cuda = cuda
+        
 
         self._early_stopping_patience = early_stopping_patience
 
@@ -27,6 +30,8 @@ class Trainer:
             self._crit = crit.cuda()
             
     def save_checkpoint(self, epoch):
+        # Create directory if it does not exist
+        os.makedirs('checkpoints', exist_ok=True)
         t.save({'state_dict': self._model.state_dict()}, 'checkpoints/checkpoint_{:03d}.ckp'.format(epoch))
     
     def restore_checkpoint(self, epoch_n):
@@ -82,10 +87,12 @@ class Trainer:
             # Propagate through the network and calculate the loss and predictions
             outputs = self._model(x)
             loss = self._crit(outputs, y)
-            predictions = t.round(outputs)
+
+            predictions = (outputs > 0.5).float()
 
         # Return the loss and predictions
         return loss, predictions
+    
     def train_epoch(self):
         # Set the model to training mode
         self._model.train()
@@ -94,8 +101,8 @@ class Trainer:
         total_loss = 0.0
         num_samples = 0
 
-        # Iterate through the training set
-        for x, y in self._train_dl:
+        # Iterate through the training set with a progress bar
+        for x, y in tqdm(self._train_dl, desc="Training", leave=False):
             # Transfer the batch to the GPU if given
             if self._cuda:
                 x = x.cuda()
@@ -125,8 +132,8 @@ class Trainer:
             total_f1 = 0.0
             num_samples = 0
 
-            # Iterate through the validation/test set
-            for x, y in self._val_test_dl:
+            # Iterate through the validation/test set with a progress bar
+            for x, y in tqdm(self._val_test_dl, desc="Validation", leave=False):
                 # Transfer the batch to the GPU if given
                 if self._cuda:
                     x = x.cuda()
@@ -155,15 +162,12 @@ class Trainer:
         best_val_loss = None
         assert self._early_stopping_patience > 0 or epochs > 0
         # create a list for the train and validation losses, and create a counter for the epoch 
-        train_losses, val_losses = [], []
+        train_losses, val_losses, val_f1s = [], [], []
         epoch = 0
-        while True:
-            if epochs > 0:
-                if epoch >= epochs:
-                    break
-
-            print(f"Epoch {epoch}")
-
+        best_val_loss = float('inf')
+        best_epoch = 0
+        for epoch in range(epochs):
+            print(f"Epoch {epoch}/{epochs - 1}")
             # Train for an epoch
             train_loss = self.train_epoch()
 
@@ -173,6 +177,7 @@ class Trainer:
             # Append the losses to the respective lists
             train_losses.append(train_loss)
             val_losses.append(val_loss)
+            val_f1s.append(val_f1)
 
             # Save the model checkpoint if there is improvement in validation loss
             if val_loss < best_val_loss or best_val_loss is None:
@@ -188,5 +193,8 @@ class Trainer:
             # Increment the epoch counter
             epoch += 1
 
-        # Return the losses for both training and validation
-        return train_losses, val_losses
+            # Print the progress
+            print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Val F1: {val_f1:.4f}")
+
+        # Return the losses and F1 scores for both training and validation
+        return train_losses, val_losses, val_f1s
