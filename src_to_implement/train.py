@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 # load the data from the csv file and perform a train-test-split
 # this can be accomplished using the already imported pandas and sklearn.model_selection modules
-data = pd.read_csv('data.csv', sep=';')
+data = pd.read_csv('./src_to_implement/data.csv', sep=';')
 
 train_data, val_data = train_test_split(data, test_size=0.2, random_state=42)
 
