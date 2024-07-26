@@ -1,4 +1,3 @@
-
 import os
 import torch as t
 from sklearn.metrics import f1_score
@@ -14,6 +13,7 @@ class Trainer:
                  train_dl=None,                # Training data set
                  val_test_dl=None,             # Validation (or test) data set
                  cuda=True,                    # Whether to use the GPU
+                 batch_size=32,                # Batch size
                  early_stopping_patience=-1):  # The patience for early stopping
         self._model = model
         self._crit = crit
@@ -21,6 +21,7 @@ class Trainer:
         self._train_dl = train_dl
         self._val_test_dl = val_test_dl
         self._cuda = cuda
+        self.batch_size = batch_size
         
 
         self._early_stopping_patience = early_stopping_patience
@@ -41,7 +42,7 @@ class Trainer:
     def save_onnx(self, fn):
         m = self._model.cpu()
         m.eval()
-        x = t.randn(1, 3, 300, 300, requires_grad=True)
+        x = t.randn(self.batch_size, 3, 300, 300, requires_grad=True)
         y = self._model(x)
         t.onnx.export(m,                 # model being run
               x,                         # model input (or a tuple for multiple inputs)
@@ -129,7 +130,7 @@ class Trainer:
         with t.no_grad():
             # Initialize variables for loss and metrics
             total_loss = 0.0
-            total_f1 = 0.0
+            total_f1 = [0.0, 0.0]
             num_samples = 0
 
             # Iterate through the validation/test set with a progress bar
@@ -146,16 +147,18 @@ class Trainer:
                 total_loss += loss.item() * x.size(0)
                 num_samples += x.size(0)
 
-                # Calculate F1 score
-                f1 = f1_score(y.cpu().numpy(), predictions.cpu().numpy(), average='macro')
-                total_f1 += f1 * x.size(0)
+                # Calculate F1 score for each class
+                f1 = f1_score(y.cpu().numpy(), predictions.cpu().numpy(), average=None)
+                total_f1[0] += f1[0] * x.size(0)
+                total_f1[1] += f1[1] * x.size(0)
 
-            # Calculate the average loss and F1 score
+            # Calculate the average loss and F1 score for each class
             avg_loss = total_loss / num_samples
-            avg_f1 = total_f1 / num_samples
+            avg_f1 = [total_f1[0] / num_samples, total_f1[1] / num_samples]
+            mean_f1 = sum(avg_f1) / len(avg_f1)
 
-            # Return the loss and F1 score
-            return avg_loss, avg_f1
+            # Return the loss and F1 scores
+            return avg_loss, avg_f1, mean_f1
         
     
     def fit(self, epochs=-1):
@@ -172,7 +175,7 @@ class Trainer:
             train_loss = self.train_epoch()
 
             # Calculate the loss and F1 score on the validation set
-            val_loss, val_f1 = self.val_test()
+            val_loss, val_f1, mean_f1 = self.val_test()
 
             # Append the losses to the respective lists
             train_losses.append(train_loss)
@@ -194,7 +197,7 @@ class Trainer:
             epoch += 1
 
             # Print the progress
-            print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Val F1: {val_f1:.4f}")
+            print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Val F1 (crack): {val_f1[0]:.4f}, Val F1 (inactive): {val_f1[1]:.4f}, Mean F1: {mean_f1:.4f}")
 
         # Return the losses and F1 scores for both training and validation
         return train_losses, val_losses, val_f1s

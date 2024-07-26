@@ -13,13 +13,14 @@ from sklearn.model_selection import train_test_split
 data = pd.read_csv('./src_to_implement/data.csv', sep=';')
 
 train_data, val_data = train_test_split(data, test_size=0.2, random_state=42)
+batch_size = 64
 
 # set up data loading for the training and validation set each using t.utils.data.DataLoader and ChallengeDataset objects
 train_dataset = ChallengeDataset(train_data)
 val_dataset = ChallengeDataset(val_data)
 
-train_loader = t.utils.data.DataLoader(train_dataset, batch_size=50, shuffle=True)
-val_loader = t.utils.data.DataLoader(val_dataset, batch_size=50, shuffle=False)
+train_loader = t.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = t.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 # create an instance of our ResNet model
 resnet = model.ResNet()
@@ -33,13 +34,12 @@ trainer = Trainer(resnet, criterion, optimizer, train_loader, val_loader, cuda=T
 # trainer.set_early_stopping(patience=5)
 
 # go, go, go... call fit on trainer
-train_loss, val_loss, val_f1 = trainer.fit(epochs=50)
+train_loss, val_loss, val_f1_crack, val_f1_inactive, val_f1_mean = trainer.fit(epochs=50)
 
-# plot the results
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(18, 12))
 
 # Plot training and validation loss
-plt.subplot(1, 2, 1)
+plt.subplot(2, 3, 1)
 plt.plot(np.arange(len(train_loss)), train_loss, label='Train Loss')
 plt.plot(np.arange(len(val_loss)), val_loss, label='Validation Loss')
 plt.yscale('log')
@@ -48,21 +48,30 @@ plt.ylabel('Loss')
 plt.legend()
 plt.title('Training and Validation Loss')
 
-# Plot validation F1 score
-plt.subplot(1, 2, 2)
-plt.plot(np.arange(len(val_f1)), val_f1, label='Validation F1 Score', color='green')
+# Plot validation F1 score for class 1
+plt.subplot(2, 3, 4)
+plt.plot(np.arange(len(val_f1_crack)), val_f1_crack, label='Val F1 Score Crack', color='blue')
 plt.xlabel('Epoch')
 plt.ylabel('F1 Score')
 plt.legend()
-plt.title('Validation F1 Score')
+plt.title('Validation F1 Score Crack')
+
+# Plot validation F1 score for class 2
+plt.subplot(2, 3, 5)
+plt.plot(np.arange(len(val_f1_inactive)), val_f1_inactive, label='Val F1 Score Inactive', color='red')
+plt.xlabel('Epoch')
+plt.ylabel('F1 Score')
+plt.legend()
+plt.title('Validation F1 Score Inactive')
+
+# Plot mean F1 score
+plt.subplot(2, 3, 6)
+plt.plot(np.arange(len(val_f1_mean)), val_f1_mean, label='Val Mean F1 Score', color='green')
+plt.xlabel('Epoch')
+plt.ylabel('F1 Score')
+plt.legend()
+plt.title('Validation Mean F1 Score')
 
 plt.tight_layout()
 plt.savefig('metrics.png')
 plt.show()
-
-# # plot the results
-# plt.plot(np.arange(len(train_loss)), train_loss, label='train loss')
-# plt.plot(np.arange(len(val_loss)), val_loss, label='val loss')
-# plt.yscale('log')
-# plt.legend()
-# plt.savefig('losses.png')
