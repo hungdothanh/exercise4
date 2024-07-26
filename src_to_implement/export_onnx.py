@@ -9,7 +9,7 @@ import pandas as pd
 resnet = model.ResNet()
 criterion = t.nn.BCELoss()
 optimizer = t.optim.Adam(resnet.parameters(), lr=0.001)
-trainer = Trainer(resnet, criterion)
+trainer = Trainer(resnet, criterion, cuda=False)
 
 epoch = int(sys.argv[1])
 
