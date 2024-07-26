@@ -165,7 +165,7 @@ class Trainer:
         best_val_loss = None
         assert self._early_stopping_patience > 0 or epochs > 0
         # create a list for the train and validation losses, and create a counter for the epoch 
-        train_losses, val_losses, val_f1s = [], [], []
+        train_losses, val_losses, val_f1_crack, val_f1_inactive, val_f1_means = [], [], [], [], []
         epoch = 0
         best_val_loss = float('inf')
         best_epoch = 0
@@ -180,7 +180,9 @@ class Trainer:
             # Append the losses to the respective lists
             train_losses.append(train_loss)
             val_losses.append(val_loss)
-            val_f1s.append(val_f1)
+            val_f1_crack.append(val_f1[0])
+            val_f1_inactive.append(val_f1[1])
+            val_f1_means.append(mean_f1)
 
             # Save the model checkpoint if there is improvement in validation loss
             if val_loss < best_val_loss or best_val_loss is None:
@@ -200,4 +202,4 @@ class Trainer:
             print(f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Val F1 (crack): {val_f1[0]:.4f}, Val F1 (inactive): {val_f1[1]:.4f}, Mean F1: {mean_f1:.4f}")
 
         # Return the losses and F1 scores for both training and validation
-        return train_losses, val_losses, val_f1s
+        return train_losses, val_losses, val_f1_crack, val_f1_inactive, val_f1_means
