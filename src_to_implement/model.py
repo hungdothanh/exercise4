@@ -50,9 +50,10 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(128, 1, stride=2)
         self.layer3 = self._make_layer(256, 1, stride=2)
         self.layer4 = self._make_layer(512, 1, stride=2)
+        self.layer5 = self._make_layer(128, 1, stride=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512, num_classes)
+        self.fc = nn.Linear(128, num_classes)
         self.sigmoid = nn.Sigmoid()
 
     def _make_layer(self, out_channels, num_blocks, stride=1):
@@ -75,6 +76,7 @@ class ResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
+        out = self.layer5(out)
 
         out = self.avgpool(out)
         out = torch.flatten(out, 1)
