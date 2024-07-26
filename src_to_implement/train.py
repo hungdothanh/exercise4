@@ -9,7 +9,6 @@ from sklearn.model_selection import train_test_split
 
 
 # load the data from the csv file and perform a train-test-split
-# this can be accomplished using the already imported pandas and sklearn.model_selection modules
 data = pd.read_csv('data.csv', sep=';')
 
 train_data, val_data = train_test_split(data, test_size=0.2, random_state=42)
@@ -31,11 +30,12 @@ resnet = model.ResNet()
 criterion = t.nn.BCELoss()
 optimizer = t.optim.Adam(resnet.parameters(), lr=0.00005, weight_decay = 0.0005)
 trainer = Trainer(resnet, criterion, optimizer, train_loader, val_loader, cuda=True, early_stopping_patience=5)
-# trainer.set_early_stopping(patience=5)
 
-# go, go, go... call fit on trainer
+# Training...!
 train_loss, val_loss, val_f1_crack, val_f1_inactive, val_f1_mean = trainer.fit(epochs=50)
 
+
+# Plot the metrics
 plt.figure(figsize=(18, 12))
 
 # Plot training and validation loss

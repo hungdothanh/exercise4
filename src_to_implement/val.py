@@ -8,7 +8,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 
-best_ckp = 15
+best_ckp = 21
 # load the data from the csv file and perform a train-test-split
 # this can be accomplished using the already imported pandas and sklearn.model_selection modules
 data = pd.read_csv('data.csv', sep=';')
@@ -31,7 +31,7 @@ resnet = model.ResNet()
 # create an object of type Trainer and set its early stopping criterion
 criterion = t.nn.BCELoss()
 optimizer = t.optim.Adam(resnet.parameters(), lr=0.00005, weight_decay = 0.0005)
-trainer = Trainer(resnet, criterion, optimizer, train_loader, val_loader, cuda=True, early_stopping_patience=5)
+trainer = Trainer(resnet, criterion, optimizer, train_loader, val_loader, cuda=False, early_stopping_patience=5)
 
 trainer.restore_checkpoint(best_ckp)
 # trainer.set_early_stopping(patience=5)
